@@ -2,10 +2,10 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-11-01',
   devtools: { enabled: false },
   css: [
-    '@fontsource/bagel-fat-one/400.css',
-    '@fontsource/work-sans/400.css',
-    '@fontsource/work-sans/500.css',
-    '@fontsource/work-sans/600.css',
+    '@fontsource/bagel-fat-one/latin-400.css',
+    '@fontsource/work-sans/latin-400.css',
+    '@fontsource/work-sans/latin-500.css',
+    '@fontsource/work-sans/latin-600.css',
     '~/assets/css/main.css',
   ],
 
