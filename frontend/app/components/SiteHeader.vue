@@ -1,18 +1,20 @@
 <script setup lang="ts">
-const props = defineProps<{ whatsapp: string }>()
-const link = computed(() => (props.whatsapp ? whatsappLink(props.whatsapp) : ''))
+const { settings } = useShop()
+const link = computed(() => (settings.value.whatsapp ? whatsappLink(settings.value.whatsapp) : ''))
+const route = useRoute()
+const inShop = computed(() => ['/shop', '/category', '/product'].some((p) => route.path.startsWith(p)))
 </script>
 
 <template>
   <header class="header">
     <div class="wrap header__inner">
-      <a href="#top" class="brand">
+      <NuxtLink to="/" class="brand" aria-label="Happy Corner home">
         <span class="seal" style="--size: 2.6rem" aria-hidden="true">快乐</span>
         <span class="brand__name">Happy Corner</span>
-      </a>
+      </NuxtLink>
       <nav class="nav" aria-label="Main">
-        <a href="#menu">Menu</a>
-        <a href="#reviews">Reviews</a>
+        <NuxtLink to="/shop" class="nav__shop" :class="{ active: inShop }">Shop</NuxtLink>
+        <NuxtLink :to="{ path: '/', hash: '#reviews' }" class="nav__link">Reviews</NuxtLink>
         <a v-if="link" :href="link" target="_blank" rel="noopener" class="btn btn--whatsapp nav__wa">
           <IconChat />
           <span>WhatsApp</span>
@@ -27,7 +29,7 @@ const link = computed(() => (props.whatsapp ? whatsappLink(props.whatsapp) : '')
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(214, 189, 143, 0.92);
+  background: rgba(214, 189, 143, 0.94);
   backdrop-filter: blur(6px);
   border-bottom: 2px solid var(--ink);
 }
@@ -57,17 +59,25 @@ const link = computed(() => (props.whatsapp ? whatsappLink(props.whatsapp) : '')
 .nav {
   display: flex;
   align-items: center;
-  gap: 1.4rem;
+  gap: 1.25rem;
 }
 
-.nav > a:not(.btn) {
+.nav__link,
+.nav__shop {
   font-weight: 600;
   text-decoration: none;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 3px;
 }
 
-.nav > a:not(.btn):hover {
-  text-decoration: underline;
-  text-underline-offset: 4px;
+.nav__link:hover,
+.nav__shop:hover,
+.nav__shop.active {
+  text-decoration-line: underline;
+}
+
+.nav__shop.active {
+  text-decoration-color: var(--lacquer);
 }
 
 .nav__wa {
@@ -75,12 +85,22 @@ const link = computed(() => (props.whatsapp ? whatsappLink(props.whatsapp) : '')
   padding-block: 0.4rem;
 }
 
-@media (max-width: 560px) {
-  .nav > a:not(.btn) {
+@media (max-width: 600px) {
+  .nav {
+    gap: 0.9rem;
+  }
+  .nav__link {
     display: none;
   }
   .brand__name {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
+  }
+  .nav__wa span {
+    display: none;
+  }
+  .nav__wa {
+    width: 2.6rem;
+    padding: 0;
   }
 }
 </style>

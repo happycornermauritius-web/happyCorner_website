@@ -2,7 +2,11 @@
 
 Website for Happy Corner, a Sino-Mauritian home kitchen: sakima, macaroni cake and Chinese roast.
 
-- **frontend/**: Nuxt website. Customers see the menu, build an order and send it on WhatsApp. They can also read and post reviews.
+- **frontend/**: Nuxt website. Customers browse the menu, build an order and send it on WhatsApp. They can also read and post reviews.
+  - `/` home: favourites, menu sections, how to order, about, reviews
+  - `/shop` the whole menu
+  - `/category/<slug>` one menu section
+  - `/product/<slug>` one dish: photos, price, description, reviews
 - **backend/**: WordPress + WooCommerce, run locally with Docker. This is the admin side, where you manage the menu, prices, photos and reviews.
 
 Customers don't need an account. Only the WordPress admin can change anything.
@@ -46,13 +50,15 @@ npm run dev
 | To do this                          | Go to                                         |
 | ----------------------------------- | --------------------------------------------- |
 | Add or edit dishes, prices, photos  | Products                                      |
+| Show a dish under Favourites        | Products → click the star next to it          |
 | Mark a dish as sold out             | Products → edit → Inventory → Out of stock    |
 | Change menu sections                | Products → Categories                         |
 | Approve or delete reviews           | Products → Reviews                            |
-| WhatsApp number, intro, hours, area | Settings → Happy Corner                       |
+| WhatsApp number, intro, about, hours| Settings → Happy Corner                       |
 
-- The dish's **short description** is the line shown under its name.
-- The **product image** is the round photo on the menu.
+- The dish's **short description** is the line shown on menu cards. The full **description** is shown on the dish's own page.
+- Use **square (1:1) photos**. The **product image** is the main photo; **product gallery** images are extra photos on the dish page.
+- The category **description** is shown on that section's page.
 - New reviews are hidden until you approve them.
 - The starter prices are placeholders.
 

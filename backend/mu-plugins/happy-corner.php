@@ -15,6 +15,7 @@ function happy_corner_defaults(): array {
 	return array(
 		'whatsapp'     => '',
 		'intro'        => '',
+		'about'        => '',
 		'location'     => '',
 		'hours'        => '',
 		'deliveryNote' => '',
@@ -55,6 +56,7 @@ function happy_corner_sanitize( $input ): array {
 
 	$out['whatsapp']     = preg_replace( '/[^\d+]/', '', (string) ( $input['whatsapp'] ?? '' ) );
 	$out['intro']        = sanitize_textarea_field( $input['intro'] ?? '' );
+	$out['about']        = sanitize_textarea_field( $input['about'] ?? '' );
 	$out['location']     = sanitize_text_field( $input['location'] ?? '' );
 	$out['hours']        = sanitize_text_field( $input['hours'] ?? '' );
 	$out['deliveryNote'] = sanitize_text_field( $input['deliveryNote'] ?? '' );
@@ -77,7 +79,8 @@ function happy_corner_render_settings(): void {
 	$name   = HAPPY_CORNER_OPTION;
 	$fields = array(
 		'whatsapp'     => array( 'WhatsApp number', 'text', 'Orders are sent here. Mauritius numbers can be written as 5XXX XXXX.' ),
-		'intro'        => array( 'Intro text', 'textarea', 'Shown under the main heading.' ),
+		'intro'        => array( 'Intro text', 'textarea', 'Shown under the main heading on the home page.' ),
+		'about'        => array( 'About Happy Corner', 'textarea', 'Your story, shown on the home page. Leave a blank line between paragraphs.' ),
 		'location'     => array( 'Area', 'text', 'For example: Port Louis. Leave empty to hide.' ),
 		'hours'        => array( 'Opening hours', 'text', 'For example: Order Tue–Sat, collect from 10:00. Leave empty to hide.' ),
 		'deliveryNote' => array( 'Ordering note', 'text', 'Shown at the top of the menu, for example delivery areas or how far ahead to order.' ),
@@ -88,7 +91,7 @@ function happy_corner_render_settings(): void {
 	?>
 	<div class="wrap">
 		<h1>Happy Corner</h1>
-		<p>Menu items and prices are managed under <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product' ) ); ?>">Products</a>. New reviews wait for your approval under <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=product-reviews' ) ); ?>">Products → Reviews</a>.</p>
+		<p>Menu items, prices and photos are managed under <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product' ) ); ?>">Products</a>. Use square (1:1) photos. Tick the star in the product list to show a dish under Favourites on the home page. New reviews wait for your approval under <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=product-reviews' ) ); ?>">Products → Reviews</a>.</p>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'happy_corner' ); ?>
 			<table class="form-table" role="presentation">

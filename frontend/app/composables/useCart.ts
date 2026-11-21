@@ -63,4 +63,7 @@ export function useCart() {
   return { lines, count, total, hasUnpriced, qtyOf, setQty, syncWith, clear }
 }
 
+/** Shared open/closed state of the order sheet. */
+export const useOrderSheet = () => useState('order-sheet-open', () => false)
+
 export const formatRs = (n: number) => `Rs ${n.toLocaleString('en-MU', { maximumFractionDigits: 2 })}`

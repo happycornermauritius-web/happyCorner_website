@@ -44,16 +44,16 @@ wp option update comment_moderation 1 >/dev/null
 # Website settings (only if not set yet)
 if ! wp option get happy_corner_settings >/dev/null 2>&1; then
   wp option add happy_corner_settings --format=json \
-    "{\"whatsapp\":\"\",\"intro\":\"\",\"location\":\"\",\"hours\":\"\",\"deliveryNote\":\"\",\"facebook\":\"\",\"instagram\":\"\",\"origins\":\"$SITE_URL\"}"
+    "{\"whatsapp\":\"\",\"intro\":\"\",\"about\":\"\",\"location\":\"\",\"hours\":\"\",\"deliveryNote\":\"\",\"facebook\":\"\",\"instagram\":\"\",\"origins\":\"$SITE_URL\"}"
 fi
 
-category() { # slug name -> prints term id
+category() { # slug name description -> prints term id
   id=$(wp term list product_cat --slug="$1" --field=term_id)
-  [ -z "$id" ] && id=$(wp term create product_cat "$2" --slug="$1" --porcelain)
+  [ -z "$id" ] && id=$(wp term create product_cat "$2" --slug="$1" --description="$3" --porcelain)
   echo "$id"
 }
 
-product() { # slug name price category_id short_description
+product() { # slug name price category_id short_description featured
   if [ -z "$(wp post list --post_type=product --name="$1" --post_status=any --field=ID)" ]; then
     wp wc product create --user="$WP_ADMIN_USER" \
       --name="$2" --slug="$1" --type=simple --status=publish \
@@ -61,20 +61,22 @@ product() { # slug name price category_id short_description
       --categories="[{\"id\":$4}]" \
       --short_description="$5" \
       --reviews_allowed=true \
+      --featured="${6:-false}" \
       --porcelain >/dev/null
     echo "  added $2"
   fi
 }
 
 echo "Creating the menu..."
-SWEETS=$(category sakima-macaroni-cake "Sakima & macaroni cake")
-ROAST=$(category chinese-roast "Chinese roast")
+# Descriptions are placeholders: change them under Products -> Categories.
+SWEETS=$(category sakima-macaroni-cake "Sakima & macaroni cake" "Sweet treats for tea time and gatherings.")
+ROAST=$(category chinese-roast "Chinese roast" "Roast meats in the Sino-Mauritian style.")
 
 # Prices are placeholders: change them in WordPress under Products.
-product sakima          "Sakima"          150 "$SWEETS" "Crisp fried pastry bound with honey syrup, cut into squares."
+product sakima          "Sakima"          150 "$SWEETS" "Crisp fried pastry bound with honey syrup, cut into squares." true
 product macaroni-cake   "Macaroni cake"   200 "$SWEETS" ""
 product grilled-sausage "Grilled sausage" 250 "$ROAST"  "Chinese sausage, grilled."
-product porc-chasive    "Porc chasive"    350 "$ROAST"  "Pork roasted in a sweet, glossy chasive glaze."
+product porc-chasive    "Porc chasive"    350 "$ROAST"  "Pork roasted in a sweet, glossy chasive glaze." true
 product chicken-chasive "Chicken chasive" 300 "$ROAST"  "Chicken roasted in the same chasive glaze."
 
 echo ""

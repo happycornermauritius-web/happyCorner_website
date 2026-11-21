@@ -9,6 +9,9 @@ export default defineNuxtConfig({
     '~/assets/css/main.css',
   ],
 
+  // Hash URLs (/#/shop) are only used for the single-file preview build.
+  router: { options: { hashMode: process.env.NUXT_ROUTER_HASH === 'true' } },
+
   runtimeConfig: {
     public: {
       // WordPress/WooCommerce address, e.g. http://localhost:8080

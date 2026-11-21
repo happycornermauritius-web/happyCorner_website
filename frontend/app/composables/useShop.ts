@@ -4,6 +4,7 @@ import type { Category, Product, Review, Settings, Shop } from '~/data/types'
 const emptySettings: Settings = {
   whatsapp: '',
   intro: '',
+  about: '',
   location: '',
   hours: '',
   deliveryNote: '',
@@ -11,11 +12,22 @@ const emptySettings: Settings = {
   instagram: '',
 }
 
-/** Turn WooCommerce HTML (names, descriptions, reviews) into plain text. */
+function parse(html: string | undefined | null): Document | null {
+  return html ? new DOMParser().parseFromString(html, 'text/html') : null
+}
+
+/** WooCommerce HTML (names, short descriptions, reviews) to one line of text. */
 function toText(html: string | undefined | null): string {
-  if (!html) return ''
-  const doc = new DOMParser().parseFromString(html, 'text/html')
-  return (doc.body.textContent || '').replace(/\s+/g, ' ').trim()
+  return (parse(html)?.body.textContent || '').replace(/\s+/g, ' ').trim()
+}
+
+/** WooCommerce HTML description to plain paragraphs. */
+function toParagraphs(html: string | undefined | null): string[] {
+  const doc = parse(html)
+  if (!doc) return []
+  const blocks = doc.body.querySelectorAll('p, li, h2, h3, h4')
+  const parts = blocks.length ? [...blocks].map((b) => b.textContent || '') : (doc.body.textContent || '').split(/\n{2,}/)
+  return parts.map((t) => t.replace(/\s+/g, ' ').trim()).filter(Boolean)
 }
 
 function toPrice(prices: any): number | null {
@@ -32,14 +44,15 @@ function wpBase(): string {
 async function loadFromWoo(base: string): Promise<Shop> {
   const store = `${base}/wp-json/wc/store/v1`
 
-  const [settingsRes, categoriesRes, productsRes, reviewsRes] = await Promise.allSettled([
+  const [settingsRes, categoriesRes, productsRes, featuredRes, reviewsRes] = await Promise.allSettled([
     $fetch<Partial<Settings>>(`${base}/wp-json/happy-corner/v1/settings`),
     $fetch<any[]>(`${store}/products/categories`, { query: { per_page: 100 } }),
     $fetch<any[]>(`${store}/products`, { query: { per_page: 100, orderby: 'menu_order', order: 'asc' } }),
-    $fetch<any[]>(`${store}/products/reviews`, { query: { per_page: 30, orderby: 'date_gmt', order: 'desc' } }),
+    $fetch<any[]>(`${store}/products`, { query: { per_page: 100, featured: true } }),
+    $fetch<any[]>(`${store}/products/reviews`, { query: { per_page: 100, orderby: 'date_gmt', order: 'desc' } }),
   ])
 
-  // Products are the one thing the page can't work without.
+  // Products are the one thing the site can't work without.
   if (productsRes.status === 'rejected') throw productsRes.reason
 
   const settings: Settings = {
@@ -47,17 +60,26 @@ async function loadFromWoo(base: string): Promise<Shop> {
     ...(settingsRes.status === 'fulfilled' ? settingsRes.value : {}),
   }
 
-  const products: Product[] = productsRes.value.map((p) => ({
-    id: p.id,
-    name: toText(p.name),
-    description: toText(p.short_description) || toText(p.description),
-    price: toPrice(p.prices),
-    image: p.images?.[0] ? { src: p.images[0].src, alt: p.images[0].alt || toText(p.name) } : null,
-    categories: (p.categories || []).map((c: any) => c.slug),
-    rating: Number(p.average_rating) || 0,
-    reviewCount: Number(p.review_count) || 0,
-    inStock: p.is_in_stock !== false,
-  }))
+  const featuredIds = new Set(featuredRes.status === 'fulfilled' ? featuredRes.value.map((p) => p.id) : [])
+
+  const products: Product[] = productsRes.value.map((p) => {
+    const name = toText(p.name)
+    const details = toParagraphs(p.description)
+    return {
+      id: p.id,
+      slug: p.slug,
+      name,
+      summary: toText(p.short_description) || details[0] || '',
+      details,
+      price: toPrice(p.prices),
+      images: (p.images || []).map((img: any) => ({ src: img.src, alt: img.alt || name })),
+      categories: (p.categories || []).map((c: any) => c.slug),
+      featured: featuredIds.has(p.id),
+      rating: Number(p.average_rating) || 0,
+      reviewCount: Number(p.review_count) || 0,
+      inStock: p.is_in_stock !== false,
+    }
+  })
 
   const used = new Set(products.flatMap((p) => p.categories))
   const categories: Category[] =
@@ -84,6 +106,7 @@ async function loadFromWoo(base: string): Promise<Shop> {
   return { demo: false, settings, categories, products, reviews }
 }
 
+/** All shop data. Loaded once in the browser and shared by every page. */
 export function useShop() {
   const base = wpBase()
 
@@ -94,7 +117,36 @@ export function useShop() {
     { server: false },
   )
 
-  return { shop: data, status, error, refresh }
+  const ready = computed(() => !!data.value)
+  const loading = computed(() => !data.value && (status.value === 'pending' || status.value === 'idle'))
+
+  const settings = computed<Settings>(() => data.value?.settings ?? emptySettings)
+  const categories = computed(() => data.value?.categories ?? [])
+  const products = computed(() => data.value?.products ?? [])
+  const reviews = computed(() => data.value?.reviews ?? [])
+
+  const productsIn = (slug: string) => products.value.filter((p) => p.categories.includes(slug))
+  const categoryOf = (p: Product) => categories.value.find((c) => p.categories.includes(c.slug))
+
+  /** Up to `max` dishes for the home page: featured ones first, then the rest. */
+  const favourites = (max = 4) =>
+    [...products.value].sort((a, b) => Number(b.featured) - Number(a.featured)).slice(0, max)
+
+  return {
+    shop: data,
+    status,
+    error,
+    refresh,
+    ready,
+    loading,
+    settings,
+    categories,
+    products,
+    reviews,
+    productsIn,
+    categoryOf,
+    favourites,
+  }
 }
 
 export interface NewReview {
@@ -103,7 +155,7 @@ export interface NewReview {
   email: string
   rating: number
   review: string
-  website: string // honeypot, must stay empty
+  website: string // spam trap, must stay empty
 }
 
 export async function postReview(input: NewReview): Promise<'sent' | 'demo'> {

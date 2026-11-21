@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import type { OrderDetails } from '~/composables/whatsapp'
 
-const props = defineProps<{ whatsapp: string; demo: boolean }>()
+const { settings, shop } = useShop()
+const whatsapp = computed(() => settings.value.whatsapp)
+const demo = computed(() => !!shop.value?.demo)
 const { lines, count, total, hasUnpriced, setQty, clear } = useCart()
+const isOpen = useOrderSheet()
 
 const dialog = ref<HTMLDialogElement | null>(null)
 const details = reactive<OrderDetails>({ name: '', method: 'collect', address: '', day: '', note: '' })
@@ -12,15 +15,18 @@ const preview = ref('')
 
 const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10)
 
-function open() {
-  error.value = ''
-  sent.value = false
-  dialog.value?.showModal()
-}
+watch(isOpen, (val) => {
+  if (val && !dialog.value?.open) {
+    error.value = ''
+    sent.value = false
+    dialog.value?.showModal()
+  } else if (!val && dialog.value?.open) {
+    dialog.value.close()
+  }
+})
 
-function close() {
-  dialog.value?.close()
-}
+const open = () => (isOpen.value = true)
+const close = () => (isOpen.value = false)
 
 function send() {
   error.value = ''
@@ -30,13 +36,13 @@ function send() {
     return (error.value = 'Enter the delivery address, or choose to collect.')
 
   const message = buildOrderMessage(lines.value, total.value, details)
-  if (!props.whatsapp) {
-    if (!props.demo) return (error.value = 'Ordering isn’t set up yet: the WhatsApp number is missing.')
+  if (!whatsapp.value) {
+    if (!demo.value) return (error.value = 'Ordering isn’t set up yet: the WhatsApp number is missing.')
     // Preview mode: show the message instead of opening WhatsApp
     preview.value = message
   } else {
     preview.value = ''
-    window.open(whatsappLink(props.whatsapp, message), '_blank', 'noopener')
+    window.open(whatsappLink(whatsapp.value, message), '_blank', 'noopener')
   }
   sent.value = true
 }
@@ -64,7 +70,7 @@ function finish() {
       </div>
     </Transition>
 
-    <dialog ref="dialog" class="sheet" aria-labelledby="order-title" @click.self="close">
+    <dialog ref="dialog" class="sheet" aria-labelledby="order-title" @click.self="close" @close="isOpen = false">
       <form class="sheet__body" method="dialog" @submit.prevent="send">
         <div class="sheet__top">
           <h2 id="order-title">Your order</h2>
@@ -72,7 +78,8 @@ function finish() {
         </div>
 
         <template v-if="!sent">
-          <ul class="lines">
+          <p v-if="!lines.length" class="empty">Nothing in your order yet. <NuxtLink to="/shop" @click="close">Go to the shop</NuxtLink> to add dishes.</p>
+          <ul v-else class="lines">
             <li v-for="l in lines" :key="l.id">
               <span class="lines__name">{{ l.name }}</span>
               <span class="lines__qty">
@@ -225,6 +232,10 @@ function finish() {
 
 .sheet__close:hover {
   background: rgba(43, 24, 16, 0.08);
+}
+
+.empty {
+  margin-top: 1rem;
 }
 
 .lines {
