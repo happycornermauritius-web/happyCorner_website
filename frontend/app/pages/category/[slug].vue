@@ -22,8 +22,8 @@ useHead({ title: () => (category.value ? `${category.value.name} – Happy Corne
         <h1>{{ category.name }}</h1>
         <p v-if="category.description" class="cat__lead">{{ category.description }}</p>
         <p v-if="settings.deliveryNote" class="cat__note">{{ settings.deliveryNote }}</p>
-        <CategoryTabs :current="category.slug" />
       </header>
+      <CategoryTabs :current="category.slug" class="cat__tabs" />
 
       <ProductGrid v-if="items.length" :products="items" />
       <p v-else class="empty">Nothing in this section right now. <NuxtLink to="/shop">See the whole menu</NuxtLink>.</p>
@@ -59,7 +59,11 @@ useHead({ title: () => (category.value ? `${category.value.name} – Happy Corne
 .cat__head {
   display: grid;
   gap: 0.9rem;
-  margin: 1rem 0 2rem;
+  margin: 1rem 0 0.25rem;
+}
+
+.cat__tabs {
+  margin-bottom: 1.25rem;
 }
 
 h1 {

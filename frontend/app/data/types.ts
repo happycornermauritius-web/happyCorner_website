@@ -59,3 +59,5 @@ export interface Shop {
   products: Product[]
   reviews: Review[]
 }
+
+export type DishKind = 'sakima' | 'macaroni' | 'sausage' | 'pork' | 'chicken'

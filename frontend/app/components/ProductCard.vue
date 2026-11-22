@@ -1,25 +1,28 @@
 <script setup lang="ts">
 import type { Product } from '~/data/types'
 
-defineProps<{ product: Product }>()
+withDefaults(defineProps<{ product: Product; large?: boolean }>(), { large: false })
 </script>
 
 <template>
-  <article class="card" :class="{ 'card--out': !product.inStock }">
+  <article class="card" :class="{ 'card--out': !product.inStock, 'card--large': large }">
     <NuxtLink :to="`/product/${product.slug}`" class="card__photo" tabindex="-1" aria-hidden="true">
-      <ProductImage :image="product.images[0]" :name="product.name" />
+      <ProductImage :image="product.images[0]" :name="product.name" :eager="large" />
+      <span v-if="!product.inStock" class="card__flag">Sold out</span>
     </NuxtLink>
     <div class="card__body">
-      <h3 class="card__name">
-        <NuxtLink :to="`/product/${product.slug}`">{{ product.name }}</NuxtLink>
-      </h3>
-      <p class="card__price">{{ product.price != null ? formatRs(product.price) : 'Ask for price' }}</p>
+      <div class="card__top">
+        <h3 class="card__name">
+          <NuxtLink :to="`/product/${product.slug}`">{{ product.name }}</NuxtLink>
+        </h3>
+        <p class="card__price">{{ product.price != null ? formatRs(product.price) : 'Ask' }}</p>
+      </div>
       <p v-if="product.summary" class="card__summary">{{ product.summary }}</p>
       <p v-if="product.reviewCount" class="card__rating">
         <StarRating :value="product.rating" />
-        <span>{{ product.reviewCount }}</span>
+        <span>{{ product.reviewCount }} {{ product.reviewCount === 1 ? 'review' : 'reviews' }}</span>
       </p>
-      <div class="card__action">
+      <div v-if="product.inStock" class="card__action">
         <QtyControl :product="product" />
       </div>
     </div>
@@ -30,24 +33,51 @@ defineProps<{ product: Product }>()
 .card {
   display: flex;
   flex-direction: column;
-  background: var(--paper);
-  border: 2px solid var(--ink);
-  border-radius: 8px;
-  overflow: hidden;
+  gap: 0.9rem;
+  min-width: 0;
 }
 
 .card__photo {
+  position: relative;
   display: block;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  overflow: hidden;
   text-decoration: none;
-  border-bottom: 2px solid var(--ink);
+}
+
+.card__photo :deep(.pimg) {
+  transition: transform 0.35s ease;
+}
+
+.card__photo:hover :deep(.pimg) {
+  transform: scale(1.04);
+}
+
+.card__flag {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .card__body {
   display: flex;
   flex-direction: column;
   flex: 1;
-  gap: 0.3rem;
-  padding: 1rem 1.1rem 1.1rem;
+  gap: 0.35rem;
+}
+
+.card__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .card__name {
@@ -67,6 +97,7 @@ defineProps<{ product: Product }>()
 }
 
 .card__price {
+  flex: none;
   font-weight: 600;
   color: var(--lacquer);
   font-variant-numeric: tabular-nums;
@@ -92,10 +123,57 @@ defineProps<{ product: Product }>()
 
 .card__action {
   margin-top: auto;
-  padding-top: 0.75rem;
+  padding-top: 0.6rem;
 }
 
-.card--out .card__photo {
-  opacity: 0.55;
+.card--out .card__photo :deep(.pimg) {
+  filter: grayscale(0.6);
+  opacity: 0.75;
+}
+
+/* Large card: the lead dish on the home page */
+.card--large .card__action {
+  margin-top: 0.4rem;
+}
+
+.card--large .card__action :deep(.add),
+.card--large .card__action :deep(.stepper) {
+  width: auto;
+  min-width: 12rem;
+}
+
+.card--large .card__name {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+  line-height: 1.05;
+}
+
+.card--large .card__price {
+  font-size: 1.35rem;
+}
+
+.card--large .card__summary {
+  font-size: 1.1rem;
+  -webkit-line-clamp: 3;
+}
+
+@media (max-width: 520px) {
+  .card__top {
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .card__name {
+    font-size: 1.05rem;
+  }
+  .card__summary {
+    font-size: 0.9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card__photo:hover :deep(.pimg) {
+    transform: none;
+  }
 }
 </style>

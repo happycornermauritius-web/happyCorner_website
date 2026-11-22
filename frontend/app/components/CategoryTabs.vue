@@ -1,11 +1,19 @@
 <script setup lang="ts">
 // Links between the whole menu and each category page.
-defineProps<{ current?: string }>()
+const props = defineProps<{ current?: string }>()
 const { categories, products, productsIn } = useShop()
+
+// On phones the tabs scroll sideways: bring the current one into view.
+const nav = ref<HTMLElement | null>(null)
+onMounted(() => {
+  const el = nav.value
+  const tab = el?.querySelector<HTMLElement>('[aria-current="page"]')
+  if (el && tab && props.current) el.scrollLeft = tab.offsetLeft - (el.clientWidth - tab.offsetWidth) / 2
+})
 </script>
 
 <template>
-  <nav class="tabs" aria-label="Menu sections">
+  <nav ref="nav" class="tabs" aria-label="Menu sections">
     <NuxtLink to="/shop" class="tab" :aria-current="!current ? 'page' : undefined">
       Everything <span class="tab__count">{{ products.length }}</span>
     </NuxtLink>
@@ -22,13 +30,27 @@ const { categories, products, productsIn } = useShop()
 </template>
 
 <style scoped>
+/* Stays under the header while scrolling the menu */
 .tabs {
+  position: sticky;
+  top: 4.25rem;
+  z-index: 10;
   display: flex;
-  flex-wrap: wrap;
   gap: 0.6rem;
+  padding-block: 0.75rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--kraft);
+  box-shadow: 0 0 0 100vmax var(--kraft);
+  clip-path: inset(0 -100vmax);
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab {
+  flex: none;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;

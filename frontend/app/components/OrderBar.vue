@@ -198,6 +198,11 @@ function finish() {
   padding-block: 0.75rem calc(0.75rem + env(safe-area-inset-bottom));
 }
 
+.bar__inner .btn {
+  flex: none;
+  white-space: nowrap;
+}
+
 .bar__inner {
   display: flex;
   align-items: center;

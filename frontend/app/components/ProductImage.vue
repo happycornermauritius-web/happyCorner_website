@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import type { ProductImage } from '~/data/types'
 
-// Square (1:1) product photo, or a paper label with the dish name when there's no photo yet.
-defineProps<{ image?: ProductImage; name: string; eager?: boolean }>()
+// Square (1:1) product photo. Until there's a photo: an illustration of the dish,
+// or a paper label with its name.
+const props = defineProps<{ image?: ProductImage; name: string; eager?: boolean }>()
+const kind = computed(() => dishKind(props.name))
 </script>
 
 <template>
   <div class="pimg">
     <img v-if="image" :src="image.src" :alt="image.alt" :loading="eager ? 'eager' : 'lazy'" width="800" height="800" />
+    <DishArt v-else-if="kind" :kind="kind" />
     <div v-else class="pimg__label" aria-hidden="true">
       <span>{{ name }}</span>
     </div>

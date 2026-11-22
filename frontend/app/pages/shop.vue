@@ -20,8 +20,8 @@ const sections = computed(() => {
         Add dishes to your order, then send it on WhatsApp.
         <template v-if="settings.deliveryNote"> {{ settings.deliveryNote }}</template>
       </p>
-      <CategoryTabs />
     </header>
+    <CategoryTabs />
 
     <p v-if="!products.length" class="empty">The menu is being updated. Message us on WhatsApp to ask what’s cooking.</p>
 
