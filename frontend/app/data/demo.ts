@@ -25,6 +25,7 @@ export const demoShop: Shop = {
     deliveryNote: '',
     deliveryPoints: ['Sample delivery point A', 'Sample delivery point B'],
     homeDeliveryMin: 4500,
+    orderAhead: { days: 7, categories: ['chinese-roast'] },
     facebook: '',
     instagram: 'https://www.instagram.com/happycorner.mu/',
   },

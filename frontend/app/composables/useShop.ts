@@ -10,6 +10,7 @@ const emptySettings: Settings = {
   deliveryNote: '',
   deliveryPoints: [],
   homeDeliveryMin: 4500,
+  orderAhead: { days: 0, categories: [] },
   facebook: '',
   instagram: '',
 }
@@ -65,6 +66,10 @@ async function loadFromWoo(base: string): Promise<Shop> {
     homeDeliveryMin: Number.isFinite(Number(raw.homeDeliveryMin)) && raw.homeDeliveryMin !== '' && raw.homeDeliveryMin != null
       ? Number(raw.homeDeliveryMin)
       : emptySettings.homeDeliveryMin,
+    orderAhead: {
+      days: Math.max(0, Number(raw.orderAhead?.days) || 0),
+      categories: Array.isArray(raw.orderAhead?.categories) ? raw.orderAhead.categories.map(String) : [],
+    },
   }
 
   const featuredIds = new Set(featuredRes.status === 'fulfilled' ? featuredRes.value.map((p) => p.id) : [])

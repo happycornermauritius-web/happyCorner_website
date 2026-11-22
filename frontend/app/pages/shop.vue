@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { settings, categories, products, productsIn } = useShop()
+const ahead = useOrderAhead()
 
 useHead({ title: 'Shop – Happy Corner' })
 
@@ -27,7 +28,10 @@ const sections = computed(() => {
 
     <section v-for="s in sections" :key="s.slug || 'more'" class="section" :aria-labelledby="`sec-${s.slug || 'more'}`">
       <div class="section__head">
-        <h2 :id="`sec-${s.slug || 'more'}`">{{ s.name }}</h2>
+        <div>
+          <h2 :id="`sec-${s.slug || 'more'}`">{{ s.name }}</h2>
+          <p v-if="s.slug && ahead.isAheadCategory(s.slug)" class="section__ahead">Order {{ ahead.label.value }} ahead</p>
+        </div>
         <NuxtLink v-if="s.slug" :to="`/category/${s.slug}`" class="more">Open this section</NuxtLink>
       </div>
       <ProductGrid :products="s.items" />
@@ -73,6 +77,12 @@ h1 {
 
 .section h2 {
   font-size: clamp(1.7rem, 3.6vw, 2.3rem);
+}
+
+.section__ahead {
+  margin-top: 0.35rem;
+  font-weight: 600;
+  color: var(--lacquer);
 }
 
 .more {

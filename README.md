@@ -56,6 +56,7 @@ npm run dev
 | Approve or delete reviews           | Products → Reviews                            |
 | WhatsApp number, intro, about, hours| Settings → Happy Corner                       |
 | Delivery points, home delivery amount | Settings → Happy Corner                     |
+| Sections that must be ordered ahead (Chinese roast: 7 days) | Settings → Happy Corner → Order ahead |
 
 - The dish's **short description** is the line shown on menu cards. The full **description** is shown on the dish's own page.
 - Use **square (1:1) photos**. The **product image** is the main photo; **product gallery** images are extra photos on the dish page.

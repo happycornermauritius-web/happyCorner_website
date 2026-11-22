@@ -2,6 +2,7 @@
 const route = useRoute()
 const { products, reviews, productsIn, categoryOf } = useShop()
 const { qtyOf } = useCart()
+const ahead = useOrderAhead()
 const orderOpen = useOrderSheet()
 
 const product = computed(() => products.value.find((p) => p.slug === String(route.params.slug)))
@@ -57,6 +58,10 @@ useHead({ title: () => (product.value ? `${product.value.name} – Happy Corner`
           </a>
           <p class="info__price">{{ product.price != null ? formatRs(product.price) : 'Ask for price' }}</p>
           <p v-if="product.summary" class="info__summary">{{ product.summary }}</p>
+          <p v-if="ahead.needsAhead(product)" class="info__ahead">
+            <strong>Order {{ ahead.label.value }} ahead.</strong>
+            The earliest day you can get it if you order today is {{ formatDay(addDaysISO(todayISO(), ahead.days.value)) }}.
+          </p>
 
           <div class="info__buy">
             <QtyControl :product="product" size="lg" />
@@ -199,6 +204,14 @@ h1 {
 .info__summary {
   max-width: 46ch;
   font-size: 1.2rem;
+}
+
+.info__ahead {
+  max-width: 46ch;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--lacquer);
+  background: rgba(248, 238, 219, 0.6);
+  border-radius: 0 8px 8px 0;
 }
 
 .info__buy {

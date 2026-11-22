@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const route = useRoute()
 const { categories, productsIn, settings } = useShop()
+const ahead = useOrderAhead()
 
 const slug = computed(() => String(route.params.slug))
 const category = computed(() => categories.value.find((c) => c.slug === slug.value))
@@ -21,6 +22,9 @@ useHead({ title: () => (category.value ? `${category.value.name} – Happy Corne
       <header class="cat__head">
         <h1>{{ category.name }}</h1>
         <p v-if="category.description" class="cat__lead">{{ category.description }}</p>
+        <p v-if="ahead.isAheadCategory(category.slug)" class="cat__ahead">
+          Order {{ ahead.label.value }} ahead: {{ category.name }} is made to order.
+        </p>
         <p v-if="settings.deliveryNote" class="cat__note">{{ settings.deliveryNote }}</p>
       </header>
       <CategoryTabs :current="category.slug" class="cat__tabs" />
@@ -75,6 +79,15 @@ h1 {
 .cat__lead {
   max-width: 56ch;
   font-size: 1.2rem;
+}
+
+.cat__ahead {
+  justify-self: start;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: var(--lacquer);
+  color: var(--paper);
+  font-weight: 600;
 }
 
 .cat__note {

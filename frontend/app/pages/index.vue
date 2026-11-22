@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { settings, categories, products, reviews, productsIn, favourites } = useShop()
+const ahead = useOrderAhead()
 const route = useRoute()
 
 useHead({ title: 'Happy Corner – Sino-Mauritian home kitchen' })
@@ -117,6 +118,7 @@ onMounted(async () => {
             <div class="tile__text">
               <h3>{{ c.name }}</h3>
               <p v-if="c.description">{{ c.description }}</p>
+              <p v-if="ahead.isAheadCategory(c.slug)" class="tile__ahead">Order {{ ahead.label.value }} ahead</p>
               <p class="tile__count">
                 See {{ productsIn(c.slug).length }} {{ productsIn(c.slug).length === 1 ? 'dish' : 'dishes' }}
               </p>
@@ -156,6 +158,10 @@ onMounted(async () => {
             <ul class="delivery__points">
               <li v-for="p in settings.deliveryPoints" :key="p">{{ p }}</li>
             </ul>
+          </div>
+          <div v-if="ahead.sectionNames.value.length">
+            <h3>Order ahead</h3>
+            <p>{{ ahead.sectionNames.value.join(' and ') }} must be ordered at least {{ ahead.label.value }} before the day you want it. Other dishes can be ordered any time.</p>
           </div>
           <div>
             <h3>Home delivery</h3>
@@ -461,13 +467,33 @@ h1 {
   gap: 0.5rem;
 }
 
+.tile__ahead {
+  justify-self: start;
+  padding: 0.15rem 0.7rem;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--lacquer);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 .tile__count {
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 4px;
 }
 
-.tile:hover .tile__count {
+.tile:hover .tile__ahead {
+  justify-self: start;
+  padding: 0.15rem 0.7rem;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--lacquer);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.tile__count {
   text-decoration-thickness: 3px;
 }
 

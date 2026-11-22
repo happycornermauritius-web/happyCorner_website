@@ -9,6 +9,8 @@ export interface Settings {
   deliveryPoints: string[]
   /** Order total (Rs) from which home delivery is offered. 0 = always offered */
   homeDeliveryMin: number
+  /** Menu sections that must be ordered ahead, and how many days ahead */
+  orderAhead: { days: number; categories: string[] }
   facebook: string
   instagram: string
 }

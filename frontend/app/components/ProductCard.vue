@@ -2,6 +2,7 @@
 import type { Product } from '~/data/types'
 
 withDefaults(defineProps<{ product: Product; large?: boolean }>(), { large: false })
+const { needsAhead, label } = useOrderAhead()
 </script>
 
 <template>
@@ -17,6 +18,7 @@ withDefaults(defineProps<{ product: Product; large?: boolean }>(), { large: fals
         </h3>
         <p class="card__price">{{ product.price != null ? formatRs(product.price) : 'Ask' }}</p>
       </div>
+      <p v-if="needsAhead(product)" class="card__ahead">Order {{ label }} ahead</p>
       <p v-if="product.summary" class="card__summary">{{ product.summary }}</p>
       <p v-if="product.reviewCount" class="card__rating">
         <StarRating :value="product.rating" />
@@ -101,6 +103,17 @@ withDefaults(defineProps<{ product: Product; large?: boolean }>(), { large: fals
   font-weight: 600;
   color: var(--lacquer);
   font-variant-numeric: tabular-nums;
+}
+
+.card__ahead {
+  justify-self: start;
+  align-self: flex-start;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  background: var(--lacquer);
+  color: var(--paper);
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .card__summary {

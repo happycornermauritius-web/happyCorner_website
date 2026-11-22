@@ -20,7 +20,17 @@ const error = ref('')
 const sent = ref(false)
 const preview = ref('')
 
-const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+const ahead = useOrderAhead()
+const minDay = computed(() => ahead.earliest.value)
+const dayRequired = computed(() => ahead.aheadInOrder.value.length > 0)
+
+// Clear an old error as soon as the customer changes something.
+watch(details, () => (error.value = ''), { deep: true })
+
+// Adding a dish that needs notice can make an already chosen day too early.
+watch(minDay, (min) => {
+  if (details.day && details.day < min) details.day = ''
+})
 
 watch(isOpen, (val) => {
   if (val && !dialog.value?.open) {
@@ -45,6 +55,10 @@ function send() {
     return (error.value = `Home delivery is for orders from ${formatRs(home.min.value)}. Choose a delivery point instead.`)
   if (details.method === 'home' && !details.address.trim())
     return (error.value = 'Enter your address for home delivery.')
+  if (dayRequired.value && !details.day)
+    return (error.value = `Choose the day you’d like your order. ${ahead.sectionNames.value.join(' and ')} must be ordered ${ahead.label.value} ahead.`)
+  if (details.day && details.day < minDay.value)
+    return (error.value = `The earliest day for this order is ${formatDay(minDay.value)}.`)
 
   const message = buildOrderMessage(lines.value, total.value, details)
   if (!whatsapp.value) {
@@ -88,7 +102,7 @@ function finish() {
     </Transition>
 
     <dialog ref="dialog" class="sheet" aria-labelledby="order-title" @click.self="close" @close="isOpen = false">
-      <form class="sheet__body" method="dialog" @submit.prevent="send">
+      <form class="sheet__body" method="dialog" novalidate @submit.prevent="send">
         <div class="sheet__top">
           <h2 id="order-title">Your order</h2>
           <button type="button" class="sheet__close" aria-label="Close" @click="close">×</button>
@@ -98,7 +112,10 @@ function finish() {
           <p v-if="!lines.length" class="empty">Nothing in your order yet. <NuxtLink to="/shop" @click="close">Go to the shop</NuxtLink> to add dishes.</p>
           <ul v-else class="lines">
             <li v-for="l in lines" :key="l.id">
-              <span class="lines__name">{{ l.name }}</span>
+              <span class="lines__name">
+                {{ l.name }}
+                <small v-if="ahead.aheadInOrder.value.some((a) => a.id === l.id)" class="lines__ahead">Order {{ ahead.label.value }} ahead</small>
+              </span>
               <span class="lines__qty">
                 <button type="button" :aria-label="`One less ${l.name}`" @click="setQty(l, l.qty - 1)">−</button>
                 <output>{{ l.qty }}</output>
@@ -148,8 +165,11 @@ function finish() {
             </label>
 
             <label class="field">
-              <span>Day you’d like it <small>(optional)</small></span>
-              <input v-model="details.day" type="date" :min="today" />
+              <span>Day you’d like it <small v-if="!dayRequired">(optional)</small></span>
+              <input v-model="details.day" type="date" :min="minDay" :required="dayRequired" aria-describedby="day-help" />
+              <small v-if="dayRequired" id="day-help" class="day-help">
+                {{ ahead.sectionNames.value.join(' and ') }} must be ordered {{ ahead.label.value }} ahead. Earliest day: {{ formatDay(minDay) }}.
+              </small>
             </label>
 
             <label class="field">
@@ -300,7 +320,19 @@ function finish() {
 }
 
 .lines__name {
+  display: grid;
   font-weight: 600;
+}
+
+.lines__ahead {
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: var(--lacquer);
+}
+
+.day-help {
+  color: var(--lacquer) !important;
+  font-weight: 500;
 }
 
 .lines__qty {

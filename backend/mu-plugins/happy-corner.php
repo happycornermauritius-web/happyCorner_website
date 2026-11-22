@@ -21,6 +21,8 @@ function happy_corner_defaults(): array {
 		'deliveryNote' => '',
 		'deliveryPoints'  => '',
 		'homeDeliveryMin' => 4500,
+		'aheadDays'       => 7,
+		'aheadCategories' => array( 'chinese-roast' ),
 		'facebook'     => '',
 		'instagram'    => '',
 		'origins'      => 'http://localhost:3000',
@@ -66,6 +68,8 @@ function happy_corner_sanitize( $input ): array {
 	$points                 = array_filter( array_map( 'sanitize_text_field', preg_split( '/\r\n|\r|\n/', (string) ( $input['deliveryPoints'] ?? '' ) ) ) );
 	$out['deliveryPoints']  = implode( "\n", $points );
 	$out['homeDeliveryMin'] = max( 0, (int) ( $input['homeDeliveryMin'] ?? 4500 ) );
+	$out['aheadDays']       = max( 0, (int) ( $input['aheadDays'] ?? 7 ) );
+	$out['aheadCategories'] = array_values( array_map( 'sanitize_title', (array) ( $input['aheadCategories'] ?? array() ) ) );
 	$out['facebook']     = esc_url_raw( $input['facebook'] ?? '' );
 	$out['instagram']    = esc_url_raw( $input['instagram'] ?? '' );
 
@@ -118,6 +122,33 @@ function happy_corner_render_settings(): void {
 						</td>
 					</tr>
 				<?php endforeach; ?>
+				<tr>
+					<th scope="row">Order ahead</th>
+					<td>
+						<fieldset>
+							<legend class="screen-reader-text">Menu sections that must be ordered ahead</legend>
+							<?php
+							$terms = get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) );
+							foreach ( is_array( $terms ) ? $terms : array() as $term ) :
+								if ( 'uncategorized' === $term->slug ) {
+									continue;
+								}
+								?>
+								<label style="display:block;margin-bottom:4px">
+									<input type="checkbox" name="<?php echo esc_attr( "{$name}[aheadCategories][]" ); ?>" value="<?php echo esc_attr( $term->slug ); ?>" <?php checked( in_array( $term->slug, (array) $s['aheadCategories'], true ) ); ?>>
+									<?php echo esc_html( $term->name ); ?>
+								</label>
+							<?php endforeach; ?>
+						</fieldset>
+						<p>
+							<label>Must be ordered at least
+								<input type="number" min="0" class="small-text" name="<?php echo esc_attr( "{$name}[aheadDays]" ); ?>" value="<?php echo esc_attr( $s['aheadDays'] ); ?>">
+								days before the day the customer wants it.
+							</label>
+						</p>
+						<p class="description">Ticked sections show “Order 1 week ahead” on the website, and customers can’t choose an earlier day.</p>
+					</td>
+				</tr>
 			</table>
 			<?php submit_button( 'Save settings' ); ?>
 		</form>
@@ -168,6 +199,11 @@ add_action( 'rest_api_init', function () {
 				unset( $s['origins'] );
 				$s['deliveryPoints']  = array_values( array_filter( array_map( 'trim', explode( "\n", (string) $s['deliveryPoints'] ) ) ) );
 				$s['homeDeliveryMin'] = (int) $s['homeDeliveryMin'];
+				$s['orderAhead']      = array(
+					'days'       => (int) $s['aheadDays'],
+					'categories' => array_values( (array) $s['aheadCategories'] ),
+				);
+				unset( $s['aheadDays'], $s['aheadCategories'] );
 				return rest_ensure_response( $s );
 			},
 		)
