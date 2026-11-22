@@ -66,7 +66,7 @@ npm run dev
 
 ## How ordering works
 
-Orders don't go through WooCommerce checkout. The customer picks dishes, enters their name, chooses a **delivery point** to pick up from, or **home delivery** (only for orders from Rs 4,500, changeable in Settings → Happy Corner), and presses **Send order on WhatsApp**. WhatsApp opens with the order written out, sent to the number in Settings → Happy Corner. You confirm the order and payment in the chat.
+Orders don't go through WooCommerce checkout. The customer picks dishes, enters their name, chooses a **delivery point** to pick up from, or **home delivery** with their address and an optional map pin (OpenStreetMap; the WhatsApp message gets a Google Maps link) (only for orders from Rs 4,500, changeable in Settings → Happy Corner), and presses **Send order on WhatsApp**. WhatsApp opens with the order written out, sent to the number in Settings → Happy Corner. You confirm the order and payment in the chat.
 
 ## How it fits together
 

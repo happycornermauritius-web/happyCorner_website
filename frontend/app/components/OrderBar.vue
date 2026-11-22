@@ -10,7 +10,7 @@ const home = useHomeDelivery()
 const points = computed(() => settings.value.deliveryPoints)
 
 const dialog = ref<HTMLDialogElement | null>(null)
-const details = reactive<OrderDetails>({ name: '', method: 'point', point: '', address: '', day: '', note: '' })
+const details = reactive<OrderDetails>({ name: '', method: 'point', point: '', address: '', pin: null, day: '', note: '' })
 
 // If the order drops below the home delivery amount, switch back to a delivery point.
 watch(home.eligible, (ok) => {
@@ -53,8 +53,8 @@ function send() {
     return (error.value = 'Choose the delivery point where you’ll pick up your order.')
   if (details.method === 'home' && !home.eligible.value)
     return (error.value = `Home delivery is for orders from ${formatRs(home.min.value)}. Choose a delivery point instead.`)
-  if (details.method === 'home' && !details.address.trim())
-    return (error.value = 'Enter your address for home delivery.')
+  if (details.method === 'home' && !details.address.trim() && !details.pin)
+    return (error.value = 'Enter your address or pin your location on the map for home delivery.')
   if (dayRequired.value && !details.day)
     return (error.value = `Choose the day you’d like your order. ${ahead.sectionNames.value.join(' and ')} must be ordered ${ahead.label.value} ahead.`)
   if (details.day && details.day < minDay.value)
@@ -159,10 +159,13 @@ function finish() {
             </label>
             <p v-else-if="details.method === 'point'" class="choice__rule">We’ll agree the delivery point with you on WhatsApp.</p>
 
-            <label v-if="details.method === 'home'" class="field">
-              <span>Address for home delivery</span>
-              <textarea v-model="details.address" rows="2" autocomplete="street-address"></textarea>
-            </label>
+            <template v-if="details.method === 'home'">
+              <label class="field">
+                <span>Address for home delivery</span>
+                <textarea v-model="details.address" rows="2" autocomplete="street-address" placeholder="House number, street, town, landmarks"></textarea>
+              </label>
+              <LocationPicker v-model="details.pin" />
+            </template>
 
             <label class="field">
               <span>Day you’d like it <small v-if="!dayRequired">(optional)</small></span>

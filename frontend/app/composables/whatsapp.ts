@@ -14,6 +14,8 @@ export interface OrderDetails {
   /** Chosen delivery point (pickup) */
   point: string
   address: string
+  /** Exact spot for home delivery, from the map */
+  pin: { lat: number; lng: number } | null
   day: string
   note: string
 }
@@ -33,10 +35,11 @@ export function buildOrderMessage(lines: CartLine[], total: number, d: OrderDeta
     `Total: ${formatRs(total)}${lines.some((l) => l.price == null) ? ' + items to confirm' : ''}`,
     `Name: ${d.name.trim()}`,
     d.method === 'home'
-      ? `Home delivery to: ${d.address.trim()}`
+      ? `Home delivery to: ${d.address.trim() || 'see location pin'}`
       : d.point
         ? `Pick up at: ${d.point}`
         : 'Pick up at a delivery point (please tell me which)',
+    d.method === 'home' && d.pin ? `Location pin: https://www.google.com/maps?q=${d.pin.lat},${d.pin.lng}` : null,
     when ? `For: ${when}` : null,
     d.note.trim() ? `Note: ${d.note.trim()}` : null,
   ]
