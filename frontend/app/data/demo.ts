@@ -26,7 +26,7 @@ export const demoShop: Shop = {
     deliveryPoints: ['Sample delivery point A', 'Sample delivery point B'],
     homeDeliveryMin: 4500,
     facebook: '',
-    instagram: '',
+    instagram: 'https://www.instagram.com/happycorner.mu/',
   },
   categories: [
     { id: 1, slug: 'sakima-macaroni-cake', name: 'Sakima & macaroni cake', description: 'Sweet treats for tea time and gatherings.' },
