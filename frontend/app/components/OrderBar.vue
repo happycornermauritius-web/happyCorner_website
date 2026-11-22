@@ -6,9 +6,16 @@ const whatsapp = computed(() => settings.value.whatsapp)
 const demo = computed(() => !!shop.value?.demo)
 const { lines, count, total, hasUnpriced, setQty, clear } = useCart()
 const isOpen = useOrderSheet()
+const home = useHomeDelivery()
+const points = computed(() => settings.value.deliveryPoints)
 
 const dialog = ref<HTMLDialogElement | null>(null)
-const details = reactive<OrderDetails>({ name: '', method: 'collect', address: '', day: '', note: '' })
+const details = reactive<OrderDetails>({ name: '', method: 'point', point: '', address: '', day: '', note: '' })
+
+// If the order drops below the home delivery amount, switch back to a delivery point.
+watch(home.eligible, (ok) => {
+  if (!ok && details.method === 'home') details.method = 'point'
+})
 const error = ref('')
 const sent = ref(false)
 const preview = ref('')
@@ -32,8 +39,12 @@ function send() {
   error.value = ''
   if (!lines.value.length) return (error.value = 'Your order is empty. Add something from the menu.')
   if (!details.name.trim()) return (error.value = 'Enter your name so we know who the order is for.')
-  if (details.method === 'delivery' && !details.address.trim())
-    return (error.value = 'Enter the delivery address, or choose to collect.')
+  if (details.method === 'point' && points.value.length && !details.point)
+    return (error.value = 'Choose the delivery point where you’ll pick up your order.')
+  if (details.method === 'home' && !home.eligible.value)
+    return (error.value = `Home delivery is for orders from ${formatRs(home.min.value)}. Choose a delivery point instead.`)
+  if (details.method === 'home' && !details.address.trim())
+    return (error.value = 'Enter your address for home delivery.')
 
   const message = buildOrderMessage(lines.value, total.value, details)
   if (!whatsapp.value) {
@@ -58,10 +69,16 @@ function finish() {
     <Transition name="bar">
       <div v-if="count > 0" class="bar">
         <div class="wrap bar__inner">
-          <p class="bar__summary">
-            <strong>{{ count }} {{ count === 1 ? 'item' : 'items' }}</strong>
-            <span>{{ formatRs(total) }}<template v-if="hasUnpriced"> + to confirm</template></span>
-          </p>
+          <div class="bar__summary">
+            <p>
+              <strong>{{ count }} {{ count === 1 ? 'item' : 'items' }}</strong>
+              <span>{{ formatRs(total) }}<template v-if="hasUnpriced"> + to confirm</template></span>
+            </p>
+            <p class="bar__hint">
+              <template v-if="home.min.value && !home.eligible.value">{{ formatRs(home.missing.value) }} more for home delivery</template>
+              <template v-else-if="home.min.value">Home delivery available</template>
+            </p>
+          </div>
           <button type="button" class="btn btn--whatsapp" @click="open">
             <IconChat />
             Review order
@@ -103,12 +120,30 @@ function finish() {
 
             <fieldset class="choice">
               <legend>How would you like to get it?</legend>
-              <label><input v-model="details.method" type="radio" value="collect" /> I’ll collect</label>
-              <label><input v-model="details.method" type="radio" value="delivery" /> Delivery</label>
+              <label><input v-model="details.method" type="radio" value="point" /> Pick up at a delivery point</label>
+              <label :class="{ off: !home.eligible.value }">
+                <input v-model="details.method" type="radio" value="home" :disabled="!home.eligible.value" aria-describedby="home-rule" />
+                Home delivery
+              </label>
+              <p id="home-rule" class="choice__rule">
+                <template v-if="home.eligible.value">Your order qualifies for home delivery.</template>
+                <template v-else>
+                  Home delivery is for orders from {{ formatRs(home.min.value) }}. Add {{ formatRs(home.missing.value) }} more to get it.
+                </template>
+              </p>
             </fieldset>
 
-            <label v-if="details.method === 'delivery'" class="field">
-              <span>Delivery address</span>
+            <label v-if="details.method === 'point' && points.length" class="field">
+              <span>Delivery point</span>
+              <select v-model="details.point">
+                <option value="" disabled>Choose where you’ll pick up</option>
+                <option v-for="p in points" :key="p" :value="p">{{ p }}</option>
+              </select>
+            </label>
+            <p v-else-if="details.method === 'point'" class="choice__rule">We’ll agree the delivery point with you on WhatsApp.</p>
+
+            <label v-if="details.method === 'home'" class="field">
+              <span>Address for home delivery</span>
               <textarea v-model="details.address" rows="2" autocomplete="street-address"></textarea>
             </label>
 
@@ -170,11 +205,17 @@ function finish() {
   gap: 1rem;
 }
 
-.bar__summary {
+.bar__summary p:first-child {
   display: flex;
   flex-wrap: wrap;
   gap: 0 1rem;
   font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar__hint {
+  font-size: 0.875rem;
+  color: var(--honey);
   font-variant-numeric: tabular-nums;
 }
 
@@ -321,6 +362,17 @@ function finish() {
   gap: 0.45rem;
   min-height: 2.25rem;
   cursor: pointer;
+}
+
+.choice label.off {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.choice__rule {
+  width: 100%;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
 }
 
 .choice input {

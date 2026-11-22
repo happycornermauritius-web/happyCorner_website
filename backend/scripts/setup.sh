@@ -44,7 +44,7 @@ wp option update comment_moderation 1 >/dev/null
 # Website settings (only if not set yet)
 if ! wp option get happy_corner_settings >/dev/null 2>&1; then
   wp option add happy_corner_settings --format=json \
-    "{\"whatsapp\":\"\",\"intro\":\"\",\"about\":\"\",\"location\":\"\",\"hours\":\"\",\"deliveryNote\":\"\",\"facebook\":\"\",\"instagram\":\"\",\"origins\":\"$SITE_URL\"}"
+    "{\"whatsapp\":\"\",\"intro\":\"\",\"about\":\"\",\"location\":\"\",\"hours\":\"\",\"deliveryNote\":\"\",\"deliveryPoints\":\"\",\"homeDeliveryMin\":4500,\"facebook\":\"\",\"instagram\":\"\",\"origins\":\"$SITE_URL\"}"
 fi
 
 category() { # slug name description -> prints term id

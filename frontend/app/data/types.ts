@@ -5,6 +5,10 @@ export interface Settings {
   location: string
   hours: string
   deliveryNote: string
+  /** Pickup places customers can choose */
+  deliveryPoints: string[]
+  /** Order total (Rs) from which home delivery is offered. 0 = always offered */
+  homeDeliveryMin: number
   facebook: string
   instagram: string
 }

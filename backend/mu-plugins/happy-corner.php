@@ -19,6 +19,8 @@ function happy_corner_defaults(): array {
 		'location'     => '',
 		'hours'        => '',
 		'deliveryNote' => '',
+		'deliveryPoints'  => '',
+		'homeDeliveryMin' => 4500,
 		'facebook'     => '',
 		'instagram'    => '',
 		'origins'      => 'http://localhost:3000',
@@ -60,6 +62,10 @@ function happy_corner_sanitize( $input ): array {
 	$out['location']     = sanitize_text_field( $input['location'] ?? '' );
 	$out['hours']        = sanitize_text_field( $input['hours'] ?? '' );
 	$out['deliveryNote'] = sanitize_text_field( $input['deliveryNote'] ?? '' );
+
+	$points                 = array_filter( array_map( 'sanitize_text_field', preg_split( '/\r\n|\r|\n/', (string) ( $input['deliveryPoints'] ?? '' ) ) ) );
+	$out['deliveryPoints']  = implode( "\n", $points );
+	$out['homeDeliveryMin'] = max( 0, (int) ( $input['homeDeliveryMin'] ?? 4500 ) );
 	$out['facebook']     = esc_url_raw( $input['facebook'] ?? '' );
 	$out['instagram']    = esc_url_raw( $input['instagram'] ?? '' );
 
@@ -83,7 +89,9 @@ function happy_corner_render_settings(): void {
 		'about'        => array( 'About Happy Corner', 'textarea', 'Your story, shown on the home page. Leave a blank line between paragraphs.' ),
 		'location'     => array( 'Area', 'text', 'For example: Port Louis. Leave empty to hide.' ),
 		'hours'        => array( 'Opening hours', 'text', 'For example: Order Tue–Sat, collect from 10:00. Leave empty to hide.' ),
-		'deliveryNote' => array( 'Ordering note', 'text', 'Shown at the top of the menu, for example delivery areas or how far ahead to order.' ),
+		'deliveryNote' => array( 'Ordering note', 'text', 'Shown on the home page and shop, for example how far ahead to order.' ),
+		'deliveryPoints'  => array( 'Delivery points', 'textarea', 'Places where customers pick up their order, one per line. Customers choose one when ordering.' ),
+		'homeDeliveryMin' => array( 'Home delivery from (Rs)', 'number', 'Orders of this amount or more can choose home delivery. Use 0 to offer home delivery on every order.' ),
 		'facebook'     => array( 'Facebook page link', 'url', '' ),
 		'instagram'    => array( 'Instagram link', 'url', '' ),
 		'origins'      => array( 'Website address', 'textarea', 'Address of the Nuxt website, one per line. Only these can load the menu and post reviews.' ),
@@ -100,7 +108,7 @@ function happy_corner_render_settings(): void {
 						<th scope="row"><label for="hc-<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $label ); ?></label></th>
 						<td>
 							<?php if ( 'textarea' === $type ) : ?>
-								<textarea class="large-text" rows="3" id="hc-<?php echo esc_attr( $key ); ?>" name="<?php echo esc_attr( "{$name}[{$key}]" ); ?>"><?php echo esc_textarea( $s[ $key ] ); ?></textarea>
+								<textarea class="large-text" rows="<?php echo 'deliveryPoints' === $key ? 5 : 3; ?>" id="hc-<?php echo esc_attr( $key ); ?>" name="<?php echo esc_attr( "{$name}[{$key}]" ); ?>"><?php echo esc_textarea( $s[ $key ] ); ?></textarea>
 							<?php else : ?>
 								<input class="regular-text" type="<?php echo esc_attr( $type ); ?>" id="hc-<?php echo esc_attr( $key ); ?>" name="<?php echo esc_attr( "{$name}[{$key}]" ); ?>" value="<?php echo esc_attr( $s[ $key ] ); ?>">
 							<?php endif; ?>
@@ -158,6 +166,8 @@ add_action( 'rest_api_init', function () {
 			'callback'            => function () {
 				$s = happy_corner_settings();
 				unset( $s['origins'] );
+				$s['deliveryPoints']  = array_values( array_filter( array_map( 'trim', explode( "\n", (string) $s['deliveryPoints'] ) ) ) );
+				$s['homeDeliveryMin'] = (int) $s['homeDeliveryMin'];
 				return rest_ensure_response( $s );
 			},
 		)

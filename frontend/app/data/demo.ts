@@ -23,6 +23,8 @@ export const demoShop: Shop = {
     location: 'Mauritius',
     hours: '',
     deliveryNote: '',
+    deliveryPoints: ['Sample delivery point A', 'Sample delivery point B'],
+    homeDeliveryMin: 4500,
     facebook: '',
     instagram: '',
   },

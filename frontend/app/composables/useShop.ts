@@ -8,6 +8,8 @@ const emptySettings: Settings = {
   location: '',
   hours: '',
   deliveryNote: '',
+  deliveryPoints: [],
+  homeDeliveryMin: 4500,
   facebook: '',
   instagram: '',
 }
@@ -45,7 +47,7 @@ async function loadFromWoo(base: string): Promise<Shop> {
   const store = `${base}/wp-json/wc/store/v1`
 
   const [settingsRes, categoriesRes, productsRes, featuredRes, reviewsRes] = await Promise.allSettled([
-    $fetch<Partial<Settings>>(`${base}/wp-json/happy-corner/v1/settings`),
+    $fetch<any>(`${base}/wp-json/happy-corner/v1/settings`),
     $fetch<any[]>(`${store}/products/categories`, { query: { per_page: 100 } }),
     $fetch<any[]>(`${store}/products`, { query: { per_page: 100, orderby: 'menu_order', order: 'asc' } }),
     $fetch<any[]>(`${store}/products`, { query: { per_page: 100, featured: true } }),
@@ -55,9 +57,14 @@ async function loadFromWoo(base: string): Promise<Shop> {
   // Products are the one thing the site can't work without.
   if (productsRes.status === 'rejected') throw productsRes.reason
 
+  const raw: any = settingsRes.status === 'fulfilled' ? settingsRes.value : {}
   const settings: Settings = {
     ...emptySettings,
-    ...(settingsRes.status === 'fulfilled' ? settingsRes.value : {}),
+    ...raw,
+    deliveryPoints: Array.isArray(raw.deliveryPoints) ? raw.deliveryPoints.filter(Boolean) : [],
+    homeDeliveryMin: Number.isFinite(Number(raw.homeDeliveryMin)) && raw.homeDeliveryMin !== '' && raw.homeDeliveryMin != null
+      ? Number(raw.homeDeliveryMin)
+      : emptySettings.homeDeliveryMin,
   }
 
   const featuredIds = new Set(featuredRes.status === 'fulfilled' ? featuredRes.value.map((p) => p.id) : [])

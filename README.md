@@ -55,6 +55,7 @@ npm run dev
 | Change menu sections                | Products → Categories                         |
 | Approve or delete reviews           | Products → Reviews                            |
 | WhatsApp number, intro, about, hours| Settings → Happy Corner                       |
+| Delivery points, home delivery amount | Settings → Happy Corner                     |
 
 - The dish's **short description** is the line shown on menu cards. The full **description** is shown on the dish's own page.
 - Use **square (1:1) photos**. The **product image** is the main photo; **product gallery** images are extra photos on the dish page.
@@ -64,7 +65,7 @@ npm run dev
 
 ## How ordering works
 
-Orders don't go through WooCommerce checkout. The customer picks dishes, enters their name, chooses collect or delivery and presses **Send order on WhatsApp**. WhatsApp opens with the order written out, sent to the number in Settings → Happy Corner. You confirm the order and payment in the chat.
+Orders don't go through WooCommerce checkout. The customer picks dishes, enters their name, chooses a **delivery point** to pick up from, or **home delivery** (only for orders from Rs 4,500, changeable in Settings → Happy Corner), and presses **Send order on WhatsApp**. WhatsApp opens with the order written out, sent to the number in Settings → Happy Corner. You confirm the order and payment in the chat.
 
 ## How it fits together
 

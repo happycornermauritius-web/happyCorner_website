@@ -10,7 +10,9 @@ export function normaliseWhatsApp(raw: string): string {
 
 export interface OrderDetails {
   name: string
-  method: 'collect' | 'delivery'
+  method: 'point' | 'home'
+  /** Chosen delivery point (pickup) */
+  point: string
   address: string
   day: string
   note: string
@@ -30,12 +32,17 @@ export function buildOrderMessage(lines: CartLine[], total: number, d: OrderDeta
     '',
     `Total: ${formatRs(total)}${lines.some((l) => l.price == null) ? ' + items to confirm' : ''}`,
     `Name: ${d.name.trim()}`,
-    d.method === 'delivery' ? `Delivery to: ${d.address.trim()}` : 'I’ll collect',
+    d.method === 'home'
+      ? `Home delivery to: ${d.address.trim()}`
+      : d.point
+        ? `Pick up at: ${d.point}`
+        : 'Pick up at a delivery point (please tell me which)',
     when ? `For: ${when}` : null,
     d.note.trim() ? `Note: ${d.note.trim()}` : null,
   ]
     .filter((line) => line !== null)
     .join('\n')
+    .replace(/\u00a0/g, ' ')
 }
 
 export function whatsappLink(number: string, message = ''): string {

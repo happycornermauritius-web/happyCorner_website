@@ -100,9 +100,24 @@ onMounted(async () => {
           </li>
           <li>
             <h3>We confirm</h3>
-            <p>Happy Corner replies to confirm the day, time and payment. Then you collect, or we deliver.</p>
+            <p>
+              Happy Corner replies to confirm the day, time and payment. Pick up at a delivery point<template v-if="settings.homeDeliveryMin">, or get home delivery on orders from {{ formatRs(settings.homeDeliveryMin) }}</template><template v-else>, or get home delivery</template>.
+            </p>
           </li>
         </ol>
+        <div class="delivery">
+          <div v-if="settings.deliveryPoints.length">
+            <h3>Delivery points</h3>
+            <ul class="delivery__points">
+              <li v-for="p in settings.deliveryPoints" :key="p">{{ p }}</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Home delivery</h3>
+            <p v-if="settings.homeDeliveryMin">For orders from {{ formatRs(settings.homeDeliveryMin) }}. Below that, pick up at a delivery point.</p>
+            <p v-else>Available for every order.</p>
+          </div>
+        </div>
         <p v-if="settings.deliveryNote" class="how__note">{{ settings.deliveryNote }}</p>
       </div>
     </section>
@@ -310,6 +325,7 @@ h1 {
   counter-increment: step;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
   column-gap: 1rem;
   align-items: start;
 }
@@ -344,6 +360,27 @@ h1 {
 .steps a {
   color: var(--ink);
   font-weight: 600;
+}
+
+.delivery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 1.5rem 2.5rem;
+  margin-top: 2.25rem;
+  padding-top: 1.75rem;
+  border-top: 2px dashed var(--line);
+}
+
+.delivery h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.delivery__points {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.2rem;
 }
 
 .how__note {

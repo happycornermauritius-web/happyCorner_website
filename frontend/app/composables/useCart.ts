@@ -63,7 +63,18 @@ export function useCart() {
   return { lines, count, total, hasUnpriced, qtyOf, setQty, syncWith, clear }
 }
 
+/** Home delivery rule: how much more the order needs before home delivery is offered. */
+export function useHomeDelivery() {
+  const { settings } = useShop()
+  const { total } = useCart()
+  const min = computed(() => settings.value.homeDeliveryMin || 0)
+  const eligible = computed(() => total.value >= min.value)
+  const missing = computed(() => Math.max(0, min.value - total.value))
+  return { min, eligible, missing }
+}
+
 /** Shared open/closed state of the order sheet. */
 export const useOrderSheet = () => useState('order-sheet-open', () => false)
 
-export const formatRs = (n: number) => `Rs ${n.toLocaleString('en-MU', { maximumFractionDigits: 2 })}`
+// Non-breaking space keeps "Rs" and the amount on one line
+export const formatRs = (n: number) => `Rs\u00a0${n.toLocaleString('en-MU', { maximumFractionDigits: 2 })}`
